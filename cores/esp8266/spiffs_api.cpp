@@ -25,6 +25,23 @@
 
 using namespace fs;
 
+void SPIFFSImpl::check(void){
+  DEBUGV("SPIFFSImpl::check: starting SPIFFS_check_" );
+  SPIFFS_check(&_fs);
+  return;}
+
+
+uint32_t SPIFFSImpl::gc(int size){
+  DEBUGV("SPIFFSImpl::check: starting SPIFFS_GC_" );
+  SPIFFS_gc(&_fs, size);
+  return _fs.stats_p_deleted;
+}
+
+uint32_t SPIFFSImpl::delPages(void){
+  return _fs.stats_p_deleted;
+}
+
+
 FileImplPtr SPIFFSImpl::open(const char* path, OpenMode openMode, AccessMode accessMode)
 {
     if (!isSpiffsFilenameValid(path)) {
