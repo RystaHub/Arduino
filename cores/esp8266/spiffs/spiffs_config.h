@@ -130,7 +130,7 @@ typedef uint8_t u8_t;
 
 // Define maximum number of gc runs to perform to reach desired free pages.
 #ifndef SPIFFS_GC_MAX_RUNS
-#define SPIFFS_GC_MAX_RUNS              5
+#define SPIFFS_GC_MAX_RUNS              15
 #endif
 
 // Enable/disable statistics on gc. Debug/test purpose only.

@@ -106,6 +106,9 @@ public:
 
     bool begin();
     void end();
+    void check(void);
+    uint32_t gc(int size);
+    uint32_t delPages(void);
     
     bool format();
     bool info(FSInfo& info);

@@ -58,6 +58,10 @@ public:
         memset(&_fs, 0, sizeof(_fs));
     }
 
+    void check(void) override;
+    uint32_t delPages(void) override; 
+    uint32_t gc(int size) override;    
+
     FileImplPtr open(const char* path, OpenMode openMode, AccessMode accessMode) override;
     bool exists(const char* path) override;
     DirImplPtr openDir(const char* path) override;

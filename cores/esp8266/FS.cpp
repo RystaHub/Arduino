@@ -206,6 +206,26 @@ File FS::open(const char* path, const char* mode) {
     return File(_impl->open(path, om, am));
 }
 
+void FS::check(void){
+  if (!_impl) {
+      return;
+  }
+  //_impl->check();
+  return;
+}
+
+uint32_t FS::gc(int size){
+  if (!_impl) {
+      return 0;
+  }
+  return _impl->gc(size);
+}
+
+uint32_t FS::delPages(void){
+  return _impl->delPages();
+}
+
+
 bool FS::exists(const char* path) {
     if (!_impl) {
         return false;

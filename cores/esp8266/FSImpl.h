@@ -71,6 +71,9 @@ public:
     virtual DirImplPtr openDir(const char* path) = 0;
     virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
     virtual bool remove(const char* path) = 0;
+    virtual void check(void) = 0;
+    virtual uint32_t gc(int size) = 0;
+    virtual uint32_t delPages(void) = 0;
 
 };
 
