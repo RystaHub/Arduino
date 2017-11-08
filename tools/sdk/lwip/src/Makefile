@@ -1,5 +1,5 @@
-TOOLCHAIN_DIR ?= ../../../xtensa-lx106-elf
-TOOLS_PATH ?= $(TOOLCHAIN_DIR)/bin/xtensa-lx106-elf-
+TOOLCHAIN_DIR ?=
+TOOLS_PATH ?= xtensa-lx106-elf-
 LWIP_LIB ?= liblwip_src.a
 SDK_PATH ?= $(abspath ../../)
 

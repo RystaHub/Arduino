@@ -673,7 +673,7 @@
  * DHCP_MAXRTX: Maximum number of retries of current request.
  */
 #ifndef DHCP_MAXRTX
-#define DHCP_MAXRTX						(*(volatile uint32*)0x600011E0)
+#define DHCP_MAXRTX                 (*(volatile uint32*)0x600011E0)
 #endif
 
 /*
@@ -815,12 +815,12 @@
 
 /** DNS maximum number of entries to maintain locally. */
 #ifndef DNS_TABLE_SIZE
-#define DNS_TABLE_SIZE                  4
+#define DNS_TABLE_SIZE                  2
 #endif
 
 /** DNS maximum host name length supported in the name table. */
 #ifndef DNS_MAX_NAME_LENGTH
-#define DNS_MAX_NAME_LENGTH             256
+#define DNS_MAX_NAME_LENGTH             32
 #endif
 
 /** The maximum of DNS servers */
@@ -963,7 +963,7 @@
  * an upper limit on the MSS advertised by the remote host.
  */
 #ifndef TCP_MSS
-#define TCP_MSS                         1460
+#define TCP_MSS                         1450
 #endif
 #endif
 
@@ -1017,7 +1017,7 @@
  * TCP_LISTEN_BACKLOG: Enable the backlog option for tcp listen pcb.
  */
 #ifndef TCP_LISTEN_BACKLOG
-#define TCP_LISTEN_BACKLOG              0
+#define TCP_LISTEN_BACKLOG              1
 #endif
 
 /**
