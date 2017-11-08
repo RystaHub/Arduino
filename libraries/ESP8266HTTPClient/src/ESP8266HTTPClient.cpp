@@ -33,7 +33,7 @@
 class TransportTraits
 {
 public:
-    virtual ~TransportTraits()
+    virtual ~TransportTraits() 
     {
     }
 
@@ -441,7 +441,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
     int buff_size = HTTP_TCP_BUFFER_SIZE;
 
     int len = size;
-    int totalBytesWritten = 0;
+    int bytesWritten = 0;
 
     if(len == 0) {
         len = -1;
@@ -480,11 +480,12 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
                 int bytesRead = stream->readBytes(buff, readBytes);
 
                 // write it to Stream
-                int bytesWritten = _tcp->write((const uint8_t *) buff, bytesRead);
+                int bytesWrite = _tcp->write((const uint8_t *) buff, bytesRead);
+                bytesWritten += bytesWrite;
 
                 // are all Bytes a writen to stream ?
-                while (bytesWritten != bytesRead) {
-                    DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] short write, %d left out of %d. retry...\n", (bytesRead - bytesWritten), bytesRead);
+                if(bytesWrite != bytesRead) {
+                    DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] short write, asked for %d but got %d retry...\n", bytesRead, bytesWrite);
 
                     // check for write error
                     if(_tcp->getWriteError()) {
@@ -497,18 +498,19 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
                     // some time for the stream
                     delay(1);
 
-                    int leftBytes = (bytesRead - bytesWritten);
+                    int leftBytes = (readBytes - bytesWrite);
 
                     // retry to send the missed bytes
-                    int bytesWrittenRetry = _tcp->write((const uint8_t *) (buff + bytesWritten), leftBytes);
-                    bytesWritten += bytesWrittenRetry;
-                    if(bytesWrittenRetry == 0) {
-                        DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] could not write to stream.\n", leftBytes, bytesWritten);
+                    bytesWrite = _tcp->write((const uint8_t *) (buff + bytesWrite), leftBytes);
+                    bytesWritten += bytesWrite;
+
+                    if(bytesWrite != leftBytes) {
+                        // failed again
+                        DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] short write, asked for %d but got %d failed.\n", leftBytes, bytesWrite);
                         free(buff);
                         return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
                     }
                 }
-                totalBytesWritten += bytesWritten;
 
                 // check for write error
                 if(_tcp->getWriteError()) {
@@ -519,7 +521,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
 
                 // count bytes to read left
                 if(len > 0) {
-                    len -= bytesWritten;
+                    len -= readBytes;
                 }
 
                 delay(0);
@@ -530,12 +532,12 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
 
         free(buff);
 
-        if(size && (int) size != totalBytesWritten) {
-            DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] Stream payload totalBytesWritten %d and size %d mismatch!.\n", totalBytesWritten, size);
+        if(size && (int) size != bytesWritten) {
+            DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] Stream payload bytesWritten %d and size %d mismatch!.\n", bytesWritten, size);
             DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] ERROR SEND PAYLOAD FAILED!");
             return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
         } else {
-            DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] Stream payload written: %d\n", totalBytesWritten);
+            DEBUG_HTTPCLIENT("[HTTP-Client][sendRequest] Stream payload written: %d\n", bytesWritten);
         }
 
     } else {
@@ -1010,7 +1012,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 {
     int buff_size = HTTP_TCP_BUFFER_SIZE;
     int len = size;
-    int totalBytesWritten = 0;
+    int bytesWritten = 0;
 
     // if possible create smaller buffer then HTTP_TCP_BUFFER_SIZE
     if((len > 0) && (len < HTTP_TCP_BUFFER_SIZE)) {
@@ -1045,46 +1047,48 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                 int bytesRead = _tcp->readBytes(buff, readBytes);
 
                 // write it to Stream
-                int bytesWritten = _tcp->write((const uint8_t *) buff, bytesRead);
+                int bytesWrite = stream->write(buff, bytesRead);
+                bytesWritten += bytesWrite;
 
                 // are all Bytes a writen to stream ?
-                while (bytesWritten != bytesRead) {
-                    DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] short write, %d left out of %d. retry...\n", (bytesRead - bytesWritten), bytesRead);
+                if(bytesWrite != bytesRead) {
+                    DEBUG_HTTPCLIENT("[HTTP-Client][writeToStream] short write asked for %d but got %d retry...\n", bytesRead, bytesWrite);
 
                     // check for write error
-                    if(_tcp->getWriteError()) {
-                        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] stream write error %d\n", _tcp->getWriteError());
+                    if(stream->getWriteError()) {
+                        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] stream write error %d\n", stream->getWriteError());
 
                         //reset write error for retry
-                        _tcp->clearWriteError();
+                        stream->clearWriteError();
                     }
 
                     // some time for the stream
                     delay(1);
 
-                    int leftBytes = (bytesRead - bytesWritten);
+                    int leftBytes = (readBytes - bytesWrite);
 
                     // retry to send the missed bytes
-                    int bytesWrittenRetry = _tcp->write((const uint8_t *) (buff + bytesWritten), leftBytes);
-                    bytesWritten += bytesWrittenRetry;
-                    if(bytesWrittenRetry == 0) {
-                        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] could not write to stream.\n", leftBytes, bytesWritten);
+                    bytesWrite = stream->write((buff + bytesWrite), leftBytes);
+                    bytesWritten += bytesWrite;
+
+                    if(bytesWrite != leftBytes) {
+                        // failed again
+                        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStream] short write asked for %d but got %d failed.\n", leftBytes, bytesWrite);
                         free(buff);
-                        return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+                        return HTTPC_ERROR_STREAM_WRITE;
                     }
                 }
-                totalBytesWritten += bytesWritten;
 
                 // check for write error
-                if(_tcp->getWriteError()) {
-                    DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] stream write error %d\n", _tcp->getWriteError());
+                if(stream->getWriteError()) {
+                    DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] stream write error %d\n", stream->getWriteError());
                     free(buff);
-                    return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+                    return HTTPC_ERROR_STREAM_WRITE;
                 }
 
                 // count bytes to read left
                 if(len > 0) {
-                    len -= bytesWritten;
+                    len -= readBytes;
                 }
 
                 delay(0);
@@ -1095,10 +1099,10 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 
         free(buff);
 
-        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] connection closed or file end (written: %d).\n", totalBytesWritten);
+        DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] connection closed or file end (written: %d).\n", bytesWritten);
 
-        if((size > 0) && (size != totalBytesWritten)) {
-            DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] totalBytesWritten %d and size %d mismatch!.\n", totalBytesWritten, size);
+        if((size > 0) && (size != bytesWritten)) {
+            DEBUG_HTTPCLIENT("[HTTP-Client][writeToStreamDataBlock] bytesWritten %d and size %d mismatch!.\n", bytesWritten, size);
             return HTTPC_ERROR_STREAM_WRITE;
         }
 
@@ -1107,7 +1111,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
         return HTTPC_ERROR_TOO_LESS_RAM;
     }
 
-    return totalBytesWritten;
+    return bytesWritten;
 }
 
 /**
