@@ -29,6 +29,7 @@
 #include <Arduino.h>
 #include <WiFiClient.h>
 
+#include <lwipopts.h>
 #ifdef DEBUG_ESP_HTTP_CLIENT
 #ifdef DEBUG_ESP_PORT
 #define DEBUG_HTTPCLIENT(...) DEBUG_ESP_PORT.printf( __VA_ARGS__ )
@@ -55,7 +56,7 @@
 #define HTTPC_ERROR_READ_TIMEOUT        (-11)
 
 /// size for the stream handling
-#define HTTP_TCP_BUFFER_SIZE (1460)
+#define HTTP_TCP_BUFFER_SIZE (TCP_MSS)
 
 /// HTTP codes see RFC7231
 typedef enum {
