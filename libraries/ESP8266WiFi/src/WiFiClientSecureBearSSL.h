@@ -59,24 +59,29 @@ class WiFiClientSecure : public WiFiClient {
 
     // Don't validate the chain, just accept whatever is given.  VERY INSECURE!
     void setInsecure() {
+      _clearAuthenticationSettings();
       _use_insecure = true;
     }
     // Assume a given public key, don't validate or use cert info at all
     void setKnownKey(const BearSSLPublicKey *pk, unsigned usages = BR_KEYTYPE_KEYX | BR_KEYTYPE_SIGN) {
+      _clearAuthenticationSettings();
       _knownkey = pk;
       _knownkey_usages = usages;
     }
     // Only check SHA1 fingerprint of certificate
     void setFingerprint(const uint8_t fingerprint[20]) {
+      _clearAuthenticationSettings();
       _use_fingerprint = true;
       memcpy_P(_fingerprint, fingerprint, 20);
     }
     // Accept any certificate that's self-signed
     void allowSelfSignedCerts() {
+      _clearAuthenticationSettings();
       _use_self_signed = true;
     }
     // Install certificates of trusted CAs or specific site
     void setTrustAnchors(const BearSSLX509List *ta) {
+      _clearAuthenticationSettings();
       _ta = ta;
     }
     // In cases when NTP is not used, app must set a time manually to check cert validity
@@ -95,7 +100,7 @@ class WiFiClientSecure : public WiFiClient {
     int getLastSSLError(char *dest = NULL, size_t len = 0);
 
     // Attach a preconfigured certificate store
-    void setCertStore(CertStoreBearSSL *certStore) {
+    void setCertStore(CertStore *certStore) {
       _certStore = certStore;
     }
 
@@ -152,7 +157,7 @@ class WiFiClientSecure : public WiFiClient {
     std::shared_ptr<unsigned char> _iobuf_out;
     time_t _now;
     const BearSSLX509List *_ta;
-    CertStoreBearSSL *_certStore;
+    CertStore *_certStore;
     int _iobuf_in_size;
     int _iobuf_out_size;
     bool _handshake_done;
